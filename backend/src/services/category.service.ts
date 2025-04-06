@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
-import { EngineeringDiscipline, PrimaryCategory, Subcategory, CategoryStats } from '../types/engineer.types';
+import { EngineeringDiscipline, PrimaryCategory, Subcategory } from '../types/engineer.types';
+import { CategoryStats, SubcategoryCount, SeniorityCount, SkillCount } from '../types/category.types';
 
 export class CategoryService {
   async getDisciplines(): Promise<EngineeringDiscipline[]> {
@@ -46,28 +47,19 @@ export class CategoryService {
 
     // Get counts by subcategory
     const { data: subcategoryCounts, error: subError } = await supabase
-      .from('engineer_subcategories')
-      .select('subcategories!inner(id, name), count', { count: 'exact' })
-      .eq('engineers.primaryCategoryId', primaryCategoryId)
-      .group('subcategories.id');
+      .rpc('get_subcategory_counts', { category_id: primaryCategoryId });
 
     if (subError) throw subError;
 
     // Get counts by seniority level
     const { data: seniorityCount, error: seniorityError } = await supabase
-      .from('engineers')
-      .select('seniorityLevel, count', { count: 'exact' })
-      .eq('primaryCategoryId', primaryCategoryId)
-      .group('seniorityLevel');
+      .rpc('get_seniority_counts', { category_id: primaryCategoryId });
 
     if (seniorityError) throw seniorityError;
 
     // Get counts by skill
     const { data: skillCounts, error: skillError } = await supabase
-      .from('engineer_skills')
-      .select('skillName, count', { count: 'exact' })
-      .eq('engineers.primaryCategoryId', primaryCategoryId)
-      .group('skillName');
+      .rpc('get_skill_counts', { category_id: primaryCategoryId });
 
     if (skillError) throw skillError;
 
@@ -76,13 +68,13 @@ export class CategoryService {
       totalEngineers: totalEngineers || 0,
       byPrimaryCategory: { [primaryCategoryId]: totalEngineers || 0 },
       bySubcategory: Object.fromEntries(
-        subcategoryCounts?.map(sc => [sc.subcategories.id, parseInt(sc.count)]) || []
+        (subcategoryCounts as SubcategoryCount[]).map(sc => [sc.id, sc.count])
       ),
       bySkill: Object.fromEntries(
-        skillCounts?.map(sc => [sc.skillName, parseInt(sc.count)]) || []
+        (skillCounts as SkillCount[]).map(sc => [sc.skill_name, sc.count])
       ),
       bySeniority: Object.fromEntries(
-        seniorityCount?.map(sc => [sc.seniorityLevel, parseInt(sc.count)]) || []
+        (seniorityCount as SeniorityCount[]).map(sc => [sc.seniority_level, sc.count])
       )
     };
 
