@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Engineer } from '../types/engineer';
 import OptimizedVideo from './OptimizedVideo';
 import { videoService } from '../services/videoService';
-import { StarIcon, BriefcaseIcon, EnvelopeIcon, PhoneIcon, CalendarIcon } from '@heroicons/react/24/solid';
+import { StarIcon, BriefcaseIcon, EnvelopeIcon, PhoneIcon, CalendarIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 
 interface EngineerCardProps {
   engineer: Engineer;
@@ -18,16 +18,15 @@ const EngineerCard: React.FC<EngineerCardProps> = ({
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [dataUsage, setDataUsage] = useState<number | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
     const generateThumbnail = async () => {
       if (engineer.profile_video_url) {
         try {
-          // Generate thumbnail if not already available
           const thumbnailUrl = await videoService.generateThumbnail(engineer.profile_video_url);
           setThumbnail(thumbnailUrl);
 
-          // Calculate estimated data usage
           const metadata = await videoService.getVideoMetadata(engineer.profile_video_url);
           const usage = videoService.calculateDataUsage(metadata.duration, 'high');
           setDataUsage(usage);
@@ -40,13 +39,8 @@ const EngineerCard: React.FC<EngineerCardProps> = ({
     generateThumbnail();
   }, [engineer.profile_video_url]);
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
 
   if (!engineer) {
     return (
@@ -64,155 +58,177 @@ const EngineerCard: React.FC<EngineerCardProps> = ({
     );
   }
 
-  // Get primary subcategory if available
   const primarySubcategory = engineer.subcategories.find((sub) => sub.is_primary)?.subcategory;
+  const visibleSkills = engineer.skills?.slice(0, 3) || [];
+  const remainingSkills = Math.max(0, (engineer.skills?.length || 0) - 3);
 
   return (
     <div
-      className={`relative w-[200px] aspect-[2/3] rounded-md overflow-hidden cursor-pointer transition-all duration-300 ${isHovered ? 'scale-105 z-10 shadow-xl' : ''}`}
+      className="relative w-[200px] aspect-[2/3] rounded-md overflow-hidden cursor-pointer bg-gray-900 hover:z-10"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       data-testid="engineer-card"
     >
-      {/* Base dark background to prevent white flash */}
-      <div className="absolute inset-0 bg-gray-900" />
-      
-      {/* Image or Video */}
-      <div className="relative h-48 w-full">
-        {engineer.profile_video_url ? (
-          <OptimizedVideo
-            src={engineer.profile_video_url}
-            poster={thumbnail || undefined}
-            className="w-full h-full object-cover"
-            autoPlay={isHovered}
-            muted
-            controls={false}
-          />
-        ) : (
-          <div className="relative w-full h-full">
-            {!imageError && engineer.profile_image_url ? (
-              <Image
-                src={engineer.profile_image_url}
-                alt={engineer.name}
-                fill
-                className="object-cover"
-                onError={() => setImageError(true)}
-                priority={false}
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500 text-sm">No image available</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Static Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-75" />
-
-      {/* Hover Gradient */}
-      <div 
-        className={`absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent transition-opacity duration-300 ${
-          isHovered ? 'opacity-100' : 'opacity-0'
-        }`}
-      />
-
-      {/* Experience Badge */}
-      <div 
-        className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs font-medium flex items-center gap-1"
-        data-testid="experience-badge"
-      >
-        <BriefcaseIcon className="w-3 h-3" />
-        {engineer.years_of_experience} YOE
-      </div>
-
-      {/* Availability Status */}
-      <div 
-        className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
-          engineer.availability_status === 'available' ? 'bg-green-500' : 'bg-red-500'
-        }`}
-        data-testid="availability-status"
-      />
-
-      {/* Rating */}
-      {engineer.rating && (
-        <div 
-          className="absolute top-8 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs font-medium flex items-center gap-1"
-          data-testid="rating"
-        >
-          <StarIcon className="w-3 h-3 text-yellow-400" />
-          {engineer.rating.toFixed(1)}
-        </div>
-      )}
-
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-0 transition-transform duration-300">
-        <h3 className={`text-lg font-bold text-white mb-1 drop-shadow-lg transition-colors duration-300 ${
-          isHovered ? 'text-red-500' : ''
-        }`}>
-          {engineer.name}
-        </h3>
-        <p className="text-sm font-medium text-gray-300 mb-3 opacity-90">
-          {primarySubcategory?.name || 'Engineer'}
-        </p>
-        
-        {dataUsage && (
-          <p className="text-xs text-gray-500 mt-1">
-            Estimated data usage: {dataUsage}MB
-          </p>
-        )}
-
-        {/* Skills */}
-        <div 
-          className={`flex flex-wrap gap-1.5 transition-opacity duration-300 mb-4 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
-          data-testid="skills-container"
-        >
-          {engineer.skills?.slice(0, 3).map((skill, index) => (
-            <span
-              key={index}
-              className="px-2 py-0.5 bg-red-600 text-white text-[11px] font-medium rounded-sm"
-            >
-              {skill.skill_name}
-            </span>
-          ))}
-          {engineer.skills?.length > 3 && (
-            <span className="px-2 py-0.5 bg-gray-700 text-white text-[11px] font-medium rounded-sm">
-              +{engineer.skills.length - 3}
-            </span>
+      {/* Card scaling wrapper */}
+      <div className={`absolute inset-0 transition-transform duration-500 ease-out ${isHovered ? 'scale-[1.03]' : 'scale-100'}`}>
+        {/* Image or Video Container */}
+        <div className="relative h-48 w-full bg-gray-800">
+          {engineer.profile_video_url ? (
+            <OptimizedVideo
+              src={engineer.profile_video_url}
+              poster={thumbnail || engineer.profile_image_url}
+              className="w-full h-full object-cover"
+              autoPlay={isHovered}
+              muted
+              controls={false}
+            />
+          ) : (
+            <div className="relative w-full h-full">
+              {!imageError && engineer.profile_image_url ? (
+                <>
+                  {/* Loading placeholder */}
+                  {!imageLoaded && (
+                    <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+                      <UserCircleIcon className="w-12 h-12 text-gray-400 animate-pulse" />
+                    </div>
+                  )}
+                  <Image
+                    src={engineer.profile_image_url}
+                    alt={engineer.name}
+                    fill
+                    sizes="200px"
+                    className={`object-cover transition-all duration-700 ease-out ${
+                      imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                    }`}
+                    onError={() => setImageError(true)}
+                    onLoad={() => setImageLoaded(true)}
+                    priority={false}
+                  />
+                </>
+              ) : (
+                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                  <UserCircleIcon className="w-16 h-16 text-gray-400" />
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Quick Action Buttons */}
+        {/* Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-75" />
         <div 
-          className={`flex gap-2 transition-opacity duration-300 ${
+          className={`absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent transition-opacity duration-500 ease-out ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
-          data-testid="action-buttons"
+        />
+
+        {/* Experience Badge */}
+        <div 
+          className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs font-medium flex items-center gap-1 shadow-lg"
+          data-testid="experience-badge"
         >
-          <button
-            onClick={() => onContact?.('email')}
-            className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors duration-200"
-            aria-label="Contact via email"
+          <BriefcaseIcon className="w-3 h-3" />
+          {engineer.years_of_experience} YOE
+        </div>
+
+        {/* Availability Status */}
+        <div 
+          className={`absolute top-2 right-2 w-3 h-3 rounded-full shadow-lg transition-transform duration-500 ease-out ${
+            engineer.availability_status === 'available' ? 'bg-green-500' : 'bg-red-500'
+          } ${isHovered ? 'scale-110' : 'scale-100'}`}
+          title={`${engineer.availability_status === 'available' ? 'Available' : 'Not Available'}`}
+          data-testid="availability-status"
+        />
+
+        {/* Rating */}
+        {engineer.rating && (
+          <div 
+            className="absolute top-8 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs font-medium flex items-center gap-1 shadow-lg"
+            data-testid="rating"
           >
-            <EnvelopeIcon className="w-4 h-4 text-white" />
-          </button>
-          <button
-            onClick={() => onContact?.('phone')}
-            className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors duration-200"
-            aria-label="Contact via phone"
+            <StarIcon className="w-3 h-3 text-yellow-400" />
+            {engineer.rating.toFixed(1)}
+          </div>
+        )}
+
+        {/* Content Container - Fixed Height */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          {/* Fixed Height Content Section */}
+          <div className="h-[140px]">
+            {/* Name and Title - Fixed Position */}
+            <div className="mb-3">
+              <h3 className={`text-lg font-bold text-white mb-1 drop-shadow-lg transition-colors duration-500 ease-out ${
+                isHovered ? 'text-red-500' : ''
+              }`}>
+                {engineer.name}
+              </h3>
+              <p className="text-sm font-medium text-gray-300">
+                {primarySubcategory?.name || 'Engineer'}
+              </p>
+            </div>
+
+            {/* Skills Container - Fixed Height */}
+            <div className="h-[72px]">
+              <div className="flex flex-wrap gap-1.5 transition-all duration-500 ease-out">
+                {visibleSkills.map((skill, index) => (
+                  <span
+                    key={index}
+                    className={`px-2 py-0.5 text-white text-[11px] font-medium rounded-sm backdrop-blur-sm shadow-lg transition-all duration-500 ease-out ${
+                      isHovered ? 'bg-red-600/80' : 'bg-red-600/60'
+                    }`}
+                  >
+                    {skill.skill_name}
+                  </span>
+                ))}
+                {remainingSkills > 0 && (
+                  <span 
+                    className={`px-2 py-0.5 text-white text-[11px] font-medium rounded-sm backdrop-blur-sm shadow-lg transition-all duration-500 ease-out ${
+                      isHovered ? 'bg-gray-700/80' : 'bg-gray-700/60'
+                    }`}
+                  >
+                    +{remainingSkills}
+                  </span>
+                )}
+              </div>
+
+              {/* Data Usage Info */}
+              {dataUsage && isHovered && (
+                <p className="text-xs text-gray-400 mt-2 transition-opacity duration-500 ease-out">
+                  Est. data: {dataUsage}MB
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Action Buttons - Absolute Position */}
+          <div 
+            className={`absolute left-4 right-4 flex gap-2 transition-all duration-500 ease-out ${
+              isHovered ? 'bottom-4 opacity-100' : '-bottom-12 opacity-0'
+            }`}
+            data-testid="action-buttons"
           >
-            <PhoneIcon className="w-4 h-4 text-white" />
-          </button>
-          <button
-            onClick={() => onContact?.('calendar')}
-            className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors duration-200"
-            aria-label="Schedule a meeting"
-          >
-            <CalendarIcon className="w-4 h-4 text-white" />
-          </button>
+            <button
+              onClick={() => onContact?.('email')}
+              className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 shadow-lg hover:scale-110"
+              aria-label="Contact via email"
+            >
+              <EnvelopeIcon className="w-4 h-4 text-white" />
+            </button>
+            <button
+              onClick={() => onContact?.('phone')}
+              className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 shadow-lg hover:scale-110"
+              aria-label="Contact via phone"
+            >
+              <PhoneIcon className="w-4 h-4 text-white" />
+            </button>
+            <button
+              onClick={() => onContact?.('calendar')}
+              className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 shadow-lg hover:scale-110"
+              aria-label="Schedule a meeting"
+            >
+              <CalendarIcon className="w-4 h-4 text-white" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
