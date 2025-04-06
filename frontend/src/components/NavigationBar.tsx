@@ -29,22 +29,22 @@ const NavigationBar = () => {
       isScrolled ? 'bg-black/90 backdrop-blur-sm' : 'bg-gradient-to-b from-black/70 to-transparent'
     }`}>
       <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Left section */}
           <div className="flex items-center space-x-8">
             {/* Logo */}
             <Link href="/" className="flex-shrink-0">
-              <span className="text-red-600 text-2xl font-bold">EngineerFlix</span>
+              <span className="text-red-600 text-2xl font-bold tracking-wider">EngineerFlix</span>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Link href="/" className="text-white hover:text-gray-300 transition">
+            <div className="hidden md:flex items-center space-x-6">
+              <Link href="/" className="text-white hover:text-gray-300 transition font-medium">
                 Home
               </Link>
               <div className="relative group">
                 <button
-                  className="text-white hover:text-gray-300 transition flex items-center"
+                  className="text-white hover:text-gray-300 transition flex items-center font-medium"
                   onMouseEnter={() => setIsCategoriesOpen(true)}
                   onMouseLeave={() => setIsCategoriesOpen(false)}
                 >
@@ -55,7 +55,7 @@ const NavigationBar = () => {
                 </button>
                 {/* Categories Dropdown */}
                 {isCategoriesOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-black/90 rounded-md shadow-lg py-2">
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-black/95 rounded-md shadow-lg py-2 backdrop-blur-sm">
                     <Link href="/category/software" className="block px-4 py-2 text-white hover:bg-gray-800">
                       Software Engineers
                     </Link>
