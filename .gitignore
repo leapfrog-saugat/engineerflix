@@ -15,9 +15,9 @@ dist/
 # Environment files
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
+frontend/.env.local
+backend/.env
 
 # Debug logs
 npm-debug.log*
@@ -32,4 +32,15 @@ yarn-error.log*
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Misc
+*.pem
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local Netlify folder
+.netlify 
