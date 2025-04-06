@@ -1,0 +1,14 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run lint-staged
+npx lint-staged
+
+# Run tests
+npm test -- --watchAll=false
+
+# Run type checking
+npm run type-check
+
+# Run accessibility tests
+npm run test:a11y 
