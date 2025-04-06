@@ -34,10 +34,10 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ engineers }) => {
   }, [isPlaying, isHovered, engineers.length]);
 
   useEffect(() => {
-    if (engineers[currentIndex]?.imageUrl) {
+    if (engineers[currentIndex]?.profile_image_url) {
       const imageSet = {
-        original: engineers[currentIndex].imageUrl,
-        thumbnail: `${engineers[currentIndex].imageUrl}?w=200&q=60`,
+        original: engineers[currentIndex].profile_image_url,
+        thumbnail: `${engineers[currentIndex].profile_image_url}?w=200&q=60`,
         placeholder: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvLy0vLi44QjhAOEA4Qi4tMkYwRjlDREVPUlVXXF5kaGRoQ0f/2wBDARUXFyAeIB4cHh4oISEmKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k='
       };
       const initialImage = loadImageProgressively(imageSet, (quality) => {
@@ -48,7 +48,11 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ engineers }) => {
           setCurrentImage(imageSet.thumbnail);
         }
       });
-      setCurrentImage(initialImage); // Set placeholder immediately
+      if (initialImage instanceof HTMLImageElement) {
+        setCurrentImage(initialImage.src);
+      } else {
+        setCurrentImage(imageSet.placeholder);
+      }
     }
   }, [engineers, currentIndex]);
 
@@ -108,7 +112,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ engineers }) => {
             {currentEngineer.name}
           </h1>
           <p className="text-xl text-gray-200 mb-6 max-w-2xl drop-shadow-md">
-            {currentEngineer.description}
+            {currentEngineer.bio}
           </p>
           
           {/* Skills */}
@@ -118,7 +122,7 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ engineers }) => {
                 key={index}
                 className="px-4 py-1 bg-red-600 text-white rounded-full text-sm font-medium hover:bg-red-700 transition-colors"
               >
-                {skill}
+                {skill.skill_name}
               </span>
             ))}
           </div>
