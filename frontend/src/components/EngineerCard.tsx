@@ -13,13 +13,12 @@ export default function EngineerCard({ engineer }: EngineerCardProps) {
 
   useEffect(() => {
     if (engineer) {
-      const imageUrl = imageError || !engineer.imageUrl 
-        ? getRandomImageForCategory(engineer.specialty)
-        : engineer.imageUrl;
+      const imageUrl = imageError || !engineer.profile_image_url 
+        ? getRandomImageForCategory()
+        : engineer.profile_image_url;
 
       const imageSet = getImageSetForEngineer(imageUrl);
-      
-      const initialImage = loadImageProgressively(imageSet, (quality) => {
+      const img = loadImageProgressively(imageSet, (quality) => {
         setCurrentQuality(quality);
         if (quality === 'original') {
           setCurrentImage(imageSet.original);
@@ -27,7 +26,12 @@ export default function EngineerCard({ engineer }: EngineerCardProps) {
           setCurrentImage(imageSet.thumbnail);
         }
       });
-      setCurrentImage(initialImage);
+
+      if (img instanceof HTMLImageElement) {
+        setCurrentImage(img.src);
+      } else {
+        setCurrentImage(imageSet.placeholder);
+      }
     }
   }, [engineer, imageError]);
 
@@ -46,6 +50,9 @@ export default function EngineerCard({ engineer }: EngineerCardProps) {
       </div>
     );
   }
+
+  // Get primary subcategory if available
+  const primarySubcategory = engineer.subcategories?.find(sub => sub.is_primary)?.subcategory;
 
   return (
     <div 
@@ -76,7 +83,7 @@ export default function EngineerCard({ engineer }: EngineerCardProps) {
           {engineer.name}
         </h3>
         <p className="text-sm font-medium text-gray-300 mb-3 opacity-90">
-          {engineer.specialty}
+          {primarySubcategory?.name || 'Engineer'}
         </p>
         
         {/* Skills */}
@@ -86,7 +93,7 @@ export default function EngineerCard({ engineer }: EngineerCardProps) {
               key={index}
               className="px-2 py-0.5 bg-red-600 text-white text-[11px] font-medium rounded-sm"
             >
-              {skill}
+              {skill.skill_name}
             </span>
           ))}
           {engineer.skills?.length > 3 && (
