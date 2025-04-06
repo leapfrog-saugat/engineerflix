@@ -3,18 +3,23 @@
 import React, { useEffect, useState } from 'react';
 import EngineerStream from '@/components/EngineerStream';
 import NavigationBar from '@/components/NavigationBar';
-import FeaturedCarousel from '@/components/FeaturedCarousel';
-import { getEngineers, getDisciplines, getPrimaryCategories, PrimaryCategory } from '@/lib/supabase';
+import HeroSection from '@/components/HeroSection';
+import FilterPanel from '@/components/FilterPanel';
+import { getEngineers, getDisciplines, getPrimaryCategories } from '@/lib/supabase';
 import { Engineer } from '@/types/engineer';
 import { preloadAllImages } from '@/utils/imageLoader';
+import { EngineerFilters, defaultFilters } from '@/types/filters';
+import { filterEngineers } from '@/utils/filterEngineers';
+
+interface CategoryEngineers {
+  categoryName: string;
+  engineers: Engineer[];
+}
 
 export default function Home() {
-  const [engineers, setEngineers] = useState<{
-    [key: string]: Engineer[];
-  }>({});
-  const [featuredEngineers, setFeaturedEngineers] = useState<Engineer[]>([]);
+  const [engineersByCategory, setEngineersByCategory] = useState<CategoryEngineers[]>([]);
+  const [filters, setFilters] = useState<EngineerFilters>(defaultFilters);
   const [isLoading, setIsLoading] = useState(true);
-  const [categories, setCategories] = useState<PrimaryCategory[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,8 +30,6 @@ export default function Home() {
       try {
         // Get software engineering discipline
         const disciplines = await getDisciplines();
-        console.log('Fetched disciplines:', disciplines);
-        
         const softwareDiscipline = disciplines.find(d => d.name === 'Software Engineering');
         
         if (!softwareDiscipline) {
@@ -35,11 +38,8 @@ export default function Home() {
           return;
         }
 
-        console.log('Found software discipline:', softwareDiscipline);
-
         // Get primary categories
         const primaryCategories = await getPrimaryCategories(softwareDiscipline.id);
-        console.log('Fetched primary categories:', primaryCategories);
         
         if (!primaryCategories.length) {
           setError('No primary categories found');
@@ -47,39 +47,25 @@ export default function Home() {
           return;
         }
 
-        // Remove any duplicate categories (by name)
-        const uniqueCategories = primaryCategories.filter((category, index, self) =>
-          index === self.findIndex((c) => c.name === category.name)
-        );
-        
-        setCategories(uniqueCategories);
-
         // Fetch engineers for each category
-        const engineersByCategory: { [key: string]: Engineer[] } = {};
-        const allEngineers: Engineer[] = [];
-
-        for (const category of uniqueCategories) {
-          console.log('Fetching engineers for category:', category.name);
+        const categorizedEngineers: CategoryEngineers[] = [];
+        for (const category of primaryCategories) {
           const categoryEngineers = await getEngineers(category.id);
-          console.log(`Found ${categoryEngineers.length} engineers for ${category.name}`);
-          engineersByCategory[category.name] = categoryEngineers;
-          allEngineers.push(...categoryEngineers);
+          if (categoryEngineers.length > 0) {
+            categorizedEngineers.push({
+              categoryName: category.name,
+              engineers: categoryEngineers
+            });
+          }
         }
 
-        if (!allEngineers.length) {
+        if (categorizedEngineers.length === 0) {
           setError('No engineers found');
           setIsLoading(false);
           return;
         }
 
-        setEngineers(engineersByCategory);
-
-        // Set featured engineers (up to 5 from each category)
-        const featured = allEngineers
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 10);
-        
-        setFeaturedEngineers(featured);
+        setEngineersByCategory(categorizedEngineers);
       } catch (error) {
         console.error('Error fetching data:', error);
         setError('Failed to load data');
@@ -107,22 +93,40 @@ export default function Home() {
     );
   }
 
+  // Get all engineers for hero section and available skills
+  const allEngineers = engineersByCategory.flatMap(category => category.engineers);
+  const availableSkills = Array.from(new Set(
+    allEngineers.flatMap(engineer => 
+      engineer.skills.map(skill => skill.skill_name)
+    )
+  )).sort();
+
+  // Apply filters to each category
+  const filteredEngineersByCategory = engineersByCategory.map(category => ({
+    ...category,
+    engineers: filterEngineers(category.engineers, filters)
+  })).filter(category => category.engineers.length > 0);
+
   return (
-    <main className="min-h-screen bg-gray-900">
+    <main className="min-h-screen bg-[#0B0F17] relative">
       <NavigationBar />
-      
-      {featuredEngineers.length > 0 && (
-        <FeaturedCarousel engineers={featuredEngineers} />
+      {allEngineers.length > 0 && (
+        <HeroSection engineer={allEngineers[0]} />
       )}
-      
-      <div className="container mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold text-white mb-6">EngineerFlix</h2>
-        
-        {categories.map(category => (
-          <EngineerStream
-            key={category.id}
-            category={category.name}
-            engineers={engineers[category.name] || []}
+      <div className="relative z-10 max-w-[1400px] mx-auto px-8 py-6 space-y-12">
+        <div className="pt-4">
+          <FilterPanel
+            onFiltersChange={setFilters}
+            availableSkills={availableSkills}
+            loading={isLoading}
+          />
+        </div>
+        {filteredEngineersByCategory.map(category => (
+          <EngineerStream 
+            key={category.categoryName}
+            engineers={category.engineers}
+            title={category.categoryName}
+            showFilters={false}
           />
         ))}
       </div>
