@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Engineer } from '@/lib/supabase';
+import { Engineer } from '../types/engineer';
 import HeroSection from './HeroSection';
 import { loadImageProgressively } from '@/utils/imageLoader';
 
@@ -93,62 +93,28 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ engineers }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center transition-all duration-500"
-        style={{ 
-          backgroundImage: `url(${currentImage})`,
-          filter: currentQuality === 'placeholder' ? 'blur(10px)' : 'none'
-        }}
-      />
+      <HeroSection engineer={currentEngineer} />
 
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
-      {/* Content */}
-      <div className="absolute bottom-[15%] left-0 w-full px-8 md:px-12 z-10">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
-            {currentEngineer.name}
-          </h1>
-          <p className="text-xl text-gray-200 mb-6 max-w-2xl drop-shadow-md">
-            {currentEngineer.bio}
-          </p>
-          
-          {/* Skills */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {currentEngineer.skills?.map((skill, index) => (
-              <span
-                key={index}
-                className="px-4 py-1 bg-red-600 text-white rounded-full text-sm font-medium hover:bg-red-700 transition-colors"
-              >
-                {skill.skill_name}
-              </span>
-            ))}
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex gap-4">
-            <button
-              onClick={handlePrev}
-              className="px-6 py-3 bg-white text-black rounded hover:bg-gray-200 transition-colors flex items-center gap-2 font-medium"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Previous
-            </button>
-            <button
-              onClick={handleNext}
-              className="px-6 py-3 bg-white text-black rounded hover:bg-gray-200 transition-colors flex items-center gap-2 font-medium"
-            >
-              Next
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
+      {/* Navigation Buttons */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
+        <button
+          onClick={handlePrev}
+          className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded hover:bg-white/20 transition-colors flex items-center gap-2 font-medium"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Previous
+        </button>
+        <button
+          onClick={handleNext}
+          className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded hover:bg-white/20 transition-colors flex items-center gap-2 font-medium"
+        >
+          Next
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
 
       {/* Slide Indicators */}

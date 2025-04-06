@@ -89,7 +89,14 @@ export const getRandomImage = (): ImageSet => {
   return DEFAULT_IMAGE_SETS[randomIndex];
 };
 
-export const getRandomVideo = (): VideoSet => {
+export const getRandomVideo = (engineer?: any): VideoSet => {
+  if (engineer?.video_url) {
+    return {
+      url: engineer.video_url,
+      thumbnail: engineer.profile_image_url || DEFAULT_VIDEO_SETS[0].thumbnail,
+      duration: '0:30' // Default duration since we don't store it
+    };
+  }
   const randomIndex = Math.floor(Math.random() * DEFAULT_VIDEO_SETS.length);
   return DEFAULT_VIDEO_SETS[randomIndex];
 };

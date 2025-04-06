@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import EngineerStream from '@/components/EngineerStream';
 import NavigationBar from '@/components/NavigationBar';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
-import { getEngineers, getDisciplines, getPrimaryCategories, Engineer, PrimaryCategory } from '@/lib/supabase';
+import { getEngineers, getDisciplines, getPrimaryCategories, PrimaryCategory } from '@/lib/supabase';
+import { Engineer } from '@/types/engineer';
 import { preloadAllImages } from '@/utils/imageLoader';
 
 export default function Home() {

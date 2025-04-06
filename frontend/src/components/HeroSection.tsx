@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Engineer } from '@/lib/supabase';
+import { Engineer } from '../types/engineer';
 import { loadImageProgressively, getRandomVideo, VideoSet } from '@/utils/imageLoader';
 
 interface HeroSectionProps {
@@ -24,7 +24,7 @@ export default function HeroSection({ engineer }: HeroSectionProps) {
     
     // Load video data
     try {
-      const video = getRandomVideo(engineer.specialty);
+      const video = getRandomVideo(engineer);
       console.log('Loading video:', video.url); // Debug log
       
       // Preload video
@@ -48,10 +48,10 @@ export default function HeroSection({ engineer }: HeroSectionProps) {
     }
 
     // Load image progressively for fallback/thumbnail
-    if (engineer.imageUrl) {
+    if (engineer.profile_image_url) {
       const imageSet = {
-        original: engineer.imageUrl,
-        thumbnail: `${engineer.imageUrl}?w=200&q=60`,
+        original: engineer.profile_image_url,
+        thumbnail: `${engineer.profile_image_url}?w=200&q=60`,
         placeholder: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvLy0vLi44QjhAOEA4Qi4tMkYwRjlDREVPUlVXXF5kaGRoQ0f/2wBDARUXFyAeIB4cHh4oISEmKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k='
       };
       const initialImage = loadImageProgressively(imageSet, (quality) => {
@@ -62,7 +62,11 @@ export default function HeroSection({ engineer }: HeroSectionProps) {
           setCurrentImage(imageSet.thumbnail);
         }
       });
-      setCurrentImage(initialImage);
+      if (typeof initialImage === 'string') {
+        setCurrentImage(initialImage);
+      } else {
+        setCurrentImage(imageSet.placeholder);
+      }
     }
 
     return () => {
@@ -176,7 +180,7 @@ export default function HeroSection({ engineer }: HeroSectionProps) {
             {engineer.name}
           </h1>
           <p className="text-xl text-gray-200 mb-6 max-w-2xl drop-shadow-md">
-            {engineer.description}
+            {engineer.bio}
           </p>
           
           {/* Skills */}
@@ -186,7 +190,7 @@ export default function HeroSection({ engineer }: HeroSectionProps) {
                 key={index}
                 className="px-4 py-1 bg-red-600 text-white rounded-full text-sm font-medium hover:bg-red-700 transition-colors"
               >
-                {skill}
+                {skill.skill_name}
               </span>
             ))}
           </div>

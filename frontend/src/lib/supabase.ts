@@ -40,7 +40,8 @@ export interface Engineer {
   hourly_rate?: number;
   availability_status: 'available' | 'unavailable' | 'part-time';
   profile_image_url?: string;
-  video_url?: string;
+  profile_video_url?: string;
+  rating?: number;
   github_url?: string;
   linkedin_url?: string;
   portfolio_url?: string;
