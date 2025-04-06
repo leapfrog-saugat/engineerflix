@@ -1,0 +1,21 @@
+{
+  "name": "engineerflix",
+  "version": "1.0.0",
+  "description": "A Netflix-style platform for discovering and hiring engineering talent",
+  "main": "index.js",
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && npm run start:dev",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "clean": "rm -rf node_modules && cd frontend && rm -rf node_modules .next && cd ../backend && rm -rf node_modules dist",
+    "clean:install": "npm run clean && npm run install:all",
+    "dev:clean": "npm run clean:install && npm run dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
